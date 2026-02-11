@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shivangsaxena/inshorts-task/config"
 
@@ -26,7 +27,13 @@ func main() {
 	defer dbPool.Close()
 
 	// Enable PostGIS extension
-	if _, err := dbPool.Exec(context.Background(), "CREATE EXTENSION IF NOT EXISTS postgis"); err != nil {
-		log.Printf("Warning: Failed to enable PostGIS extension: %v", err)
-	}
+	// if _, err := dbPool.Exec(context.Background(), "CREATE EXTENSION IF NOT EXISTS postgis"); err != nil {
+	// 	log.Printf("Warning: Failed to enable PostGIS extension: %v", err)
+	// }
+
+	// HTTP Server
+	r := gin.Default()
+
+	logger.Log.Info("Server starting on port " + cfg.AppPort)
+	r.Run(":" + cfg.AppPort)
 }
