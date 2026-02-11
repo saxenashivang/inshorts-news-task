@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shivangsaxena/inshorts-task/config"
 	"github.com/shivangsaxena/inshorts-task/internal/adapter/handler"
+	"github.com/shivangsaxena/inshorts-task/internal/adapter/llm"
 	"github.com/shivangsaxena/inshorts-task/internal/adapter/storage/repository"
 	"github.com/shivangsaxena/inshorts-task/internal/core/service"
 	"github.com/shivangsaxena/inshorts-task/internal/core/usecase"
@@ -60,6 +61,22 @@ func main() {
 	// Repositories & Services
 	newsRepo := repository.NewNewsRepository(dbPool)
 
+	// LLM Setup (LangChain)
+	ctx := context.Background()
+	llmModel, err := llm.NewLLM(ctx, cfg)
+	if err != nil {
+		logger.Log.Error("Failed to initialize LLM", "error", err)
+		// Proceeding without LLM might break things, but allowed for now if key missing
+	}
+
+	var llmService *llm.LangChainService
+	if llmModel != nil {
+		llmService = llm.NewLangChainService(llmModel)
+	} else {
+		// Handle nil llmService gracefully or panic depending on requirement
+		log.Println("Warning: LLM Service is nil due to initialization failure")
+	}
+
 	// Seed Data
 	ingester := service.NewIngestionService(newsRepo)
 	go func() {
@@ -70,6 +87,10 @@ func main() {
 
 	// UseCases
 	newsUseCase := usecase.NewNewsUseCase(newsRepo)
+
+	if llmService == nil {
+		log.Fatal("LLM Service required")
+	}
 
 	r := gin.Default()
 	newsHandler := handler.NewNewsHandler(newsUseCase)

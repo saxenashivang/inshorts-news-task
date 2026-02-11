@@ -34,6 +34,10 @@ services:
       - DB_PASSWORD=default@123
       - DB_NAME=news_db
       - REDIS_ADDR=redis:6379
+      - LLM_PROVIDER=${LLM_PROVIDER}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
