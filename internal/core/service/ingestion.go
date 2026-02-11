@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/lib/pq"
 	"github.com/shivangsaxena/inshorts-task/internal/core/entity"
 	"github.com/shivangsaxena/inshorts-task/internal/core/port"
 )
@@ -68,7 +67,7 @@ func (s *IngestionService) IngestFromFile(ctx context.Context, filePath string) 
 			Content:   dto.Content,
 			Source:    dto.Source,
 			URL:       dto.URL,
-			Category:  pq.StringArray(dto.Category),
+			Category:  dto.Category,
 			Lat:       dto.Lat,
 			Lng:       dto.Lng,
 			Published: pubTime,
