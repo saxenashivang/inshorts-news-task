@@ -86,7 +86,7 @@ func main() {
 	}()
 
 	// UseCases
-	newsUseCase := usecase.NewNewsUseCase(newsRepo)
+	newsUseCase := usecase.NewNewsUseCase(newsRepo, llmService)
 
 	if llmService == nil {
 		log.Fatal("LLM Service required")
