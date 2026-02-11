@@ -8,8 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shivangsaxena/inshorts-task/config"
+	"github.com/shivangsaxena/inshorts-task/internal/adapter/handler"
 	"github.com/shivangsaxena/inshorts-task/internal/adapter/storage/repository"
 	"github.com/shivangsaxena/inshorts-task/internal/core/service"
+	"github.com/shivangsaxena/inshorts-task/internal/core/usecase"
 
 	"github.com/shivangsaxena/inshorts-task/pkg/logger"
 )
@@ -66,8 +68,12 @@ func main() {
 		}
 	}()
 
-	// HTTP Server
+	// UseCases
+	newsUseCase := usecase.NewNewsUseCase(newsRepo)
+
 	r := gin.Default()
+	newsHandler := handler.NewNewsHandler(newsUseCase)
+	handler.RegisterRoutes(r, newsHandler)
 
 	logger.Log.Info("Server starting on port " + cfg.AppPort)
 	r.Run(":" + cfg.AppPort)
