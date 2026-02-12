@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -15,6 +16,9 @@ func NewTrendingRepo(addr string) *TrendingRepo {
 	rdb := redis.NewClient(&redis.Options{
 		Addr: addr,
 	})
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
+		log.Fatalf("Failed to connect to Redis at %s: %v", addr, err)
+	}
 	return &TrendingRepo{client: rdb}
 }
 

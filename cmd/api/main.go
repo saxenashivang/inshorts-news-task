@@ -10,6 +10,7 @@ import (
 	"github.com/shivangsaxena/inshorts-task/config"
 	"github.com/shivangsaxena/inshorts-task/internal/adapter/handler"
 	"github.com/shivangsaxena/inshorts-task/internal/adapter/llm"
+	"github.com/shivangsaxena/inshorts-task/internal/adapter/storage/redis"
 	"github.com/shivangsaxena/inshorts-task/internal/adapter/storage/repository"
 	"github.com/shivangsaxena/inshorts-task/internal/core/service"
 	"github.com/shivangsaxena/inshorts-task/internal/core/usecase"
@@ -58,6 +59,9 @@ func main() {
 		log.Fatalf("Failed to initialize database schema: %v", err)
 	}
 
+	// Redis Connection
+	trendingRepo := redis.NewTrendingRepo(cfg.RedisAddr)
+
 	// Repositories & Services
 	newsRepo := repository.NewNewsRepository(dbPool)
 
@@ -86,7 +90,7 @@ func main() {
 	}()
 
 	// UseCases
-	newsUseCase := usecase.NewNewsUseCase(newsRepo, llmService)
+	newsUseCase := usecase.NewNewsUseCase(newsRepo, llmService, trendingRepo)
 
 	if llmService == nil {
 		log.Fatal("LLM Service required")

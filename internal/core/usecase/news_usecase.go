@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/shivangsaxena/inshorts-task/internal/core/entity"
@@ -11,12 +10,13 @@ import (
 )
 
 type NewsUseCase struct {
-	repo       port.NewsRepository
-	llmService port.LLMService
+	repo         port.NewsRepository
+	llmService   port.LLMService
+	trendingRepo port.TrendingRepository
 }
 
-func NewNewsUseCase(repo port.NewsRepository, llmService port.LLMService) *NewsUseCase {
-	return &NewsUseCase{repo: repo, llmService: llmService}
+func NewNewsUseCase(repo port.NewsRepository, llm port.LLMService, trendingRepo port.TrendingRepository) *NewsUseCase {
+	return &NewsUseCase{repo: repo, llmService: llm, trendingRepo: trendingRepo}
 }
 
 type NewsResponse struct {
@@ -31,8 +31,6 @@ func (uc *NewsUseCase) GetNews(ctx context.Context, query string, userLat, userL
 		// Fallback to text search if LLM fails
 		parsed = &port.LLMResponse{Intent: "search"}
 	}
-
-	log.Printf("LLM Parsed Intent: %s, Location: %s, Category: %s, Entities: %v", parsed.Intent, parsed.Location, parsed.Category, parsed.Entities)
 
 	var articles []entity.Article
 
@@ -80,4 +78,27 @@ func (uc *NewsUseCase) GetNews(ctx context.Context, query string, userLat, userL
 		Articles: articles,
 		Summary:  summary,
 	}, nil
+}
+
+func (uc *NewsUseCase) RecordView(ctx context.Context, articleID string) error {
+	return uc.trendingRepo.RecordView(ctx, articleID)
+}
+
+func (uc *NewsUseCase) GetTrending(ctx context.Context) ([]entity.Article, error) {
+	// Get IDs from Redis
+	ids, err := uc.trendingRepo.GetTrending(ctx, 10) // Top 10
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch full articles from DB
+	var articles []entity.Article
+	for _, id := range ids {
+		// Use Search with ID filter
+		res, err := uc.repo.Search(ctx, "", map[string]interface{}{"id": id})
+		if err == nil && len(res) > 0 {
+			articles = append(articles, res[0])
+		}
+	}
+	return articles, nil
 }

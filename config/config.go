@@ -14,6 +14,7 @@ type Config struct {
 	DBUser      string
 	DBPassword  string
 	DBName      string
+	RedisAddr   string
 	LLMProvider string
 	OpenAIKey   string
 	GeminiKey   string
@@ -33,6 +34,7 @@ func Load() *Config {
 		DBUser:      getEnv("DB_USER", "user"),
 		DBPassword:  getEnv("DB_PASSWORD", "password"),
 		DBName:      getEnv("DB_NAME", "newsdb"),
+		RedisAddr:   getEnv("REDIS_ADDR", "localhost:6379"),
 		LLMProvider: getEnv("LLM_PROVIDER", "gemini"), // openai, gemini, claude
 		OpenAIKey:   getEnv("OPENAI_API_KEY", ""),
 		GeminiKey:   getEnv("GEMINI_API_KEY", ""),

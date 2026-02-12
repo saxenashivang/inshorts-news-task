@@ -36,10 +36,30 @@ func (h *NewsHandler) GetNews(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+func (h *NewsHandler) GetTrending(c *gin.Context) {
+	articles, err := h.useCase.GetTrending(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"articles": articles})
+}
+
+func (h *NewsHandler) RecordView(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.useCase.RecordView(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
 func RegisterRoutes(r *gin.Engine, h *NewsHandler) {
 	api := r.Group("/api/v1")
 	{
 		api.GET("/news", h.GetNews)
 		api.GET("/news/nearby", h.GetNews)
+		api.GET("/news/trending", h.GetTrending)
+		api.POST("/news/:id/view", h.RecordView)
 	}
 }
