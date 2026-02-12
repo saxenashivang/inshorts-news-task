@@ -2,7 +2,7 @@
 
 ## Overview
 - **Geo-spatial queries** (PostGIS)
-- **Natural Language Understanding** (Langchain) for intent extraction
+- **Natural Language Understanding** (OpenAI/Gemini/Antropic LLM) for intent extraction
 - **Trending News** (Redis Sorted Sets)
 - **Clean Architecture** (Handlers -> UseCases -> Repositories)
 
@@ -11,28 +11,56 @@
 - **Gin** (Web Framework)
 - **PostgreSQL + PostGIS** (Storage)
 - **Redis** (Caching/Trending)
-- **Langchain** (Gemini Tested)
+- **OpenAI API** (Langchain)
 
 ## Setup
 
-1. **Prerequisites**: Docker, Go 1.22+
-2. **Start Infrastructure**:
+### Option 1: Docker (Recommended)
+1. **Prerequisites**: Docker, Docker Compose
+2. **Start Infrastructure & App**:
    ```bash
-   docker-compose up -build
+   docker-compose up --build
    ```
-3. **Run Migrations**:
-   (You can use a tool like `migrate` or manually run the SQL in `migrations/`)
+   The API will be available at `http://localhost:8080`.
+
+### Option 2: Local Development
+1. **Prerequisites**: Go 1.25+, PostgreSQL + PostGIS, Redis
+2. **Start Dependencies**:
+   Ensure PostgreSQL and Redis are running.
+3. **Configure Environment**:
+   Create a `.env` file or export variables:
    ```bash
-   cat migrations/001_schema.sql | docker exec -i inshorts-task-postgres-1 psql -U user -d news_db
+   export DB_HOST=localhost
+   export DB_PORT=5432
+   export DB_USER=user
+   export DB_PASSWORD=password
+   export DB_NAME=newsdb
+   export REDIS_ADDR=localhost:6379
+   export LLM_PROVIDER=openai # or gemini, claude
+   export OPENAI_API_KEY="your_key"
+   ```
+4. **Run Application**:
+   ```bash
+   go mod tidy
+   go run cmd/api/main.go
    ```
 
 ## Endpoints
 
+### News Retrieval
 - `GET /api/v1/news?q=Tech+news`
-  - Uses full-text search.
-- `GET /api/v1/news?q=News+near+me&lat=37.77&lng=-122.41`
+  - Uses full-text search along with query lat=28.38&lng=77.12.
+- `GET /api/v1/news/nearby`
   - Uses `st_dwithin` for geospatial search.
   - Automatically enriches response with an AI summary.
+
+### Trending News
+- `POST /api/v1/news/:id/view`
+  - Records a view for a specific article (Article ID can be UUID).
+  - Used to track trending articles.
+- `GET /api/v1/news/trending`
+  - Returns the top 10 trending articles based on view counts.
+  - Data is fetched from Redis (cached IDs) and enriched from PostgreSQL.
 
 ## Architecture
 
